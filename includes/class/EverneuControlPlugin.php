@@ -42,8 +42,7 @@ class EverneuControlPlugin
         require_once EVN_DIR . 'includes/class/Helpers/Environment.php';
         require_once EVN_DIR . 'includes/class/Helpers/CronInterval.php';
 
-        /* Doesn't work now.
-        Needs create a new repo in GitHup separetly for uploading updates */
+        /* Include GitHub updater */
         require_once EVN_DIR . 'includes/class/Helpers/plugin-data-parser.php';
         require_once EVN_DIR . 'includes/class/Helpers/GitHubUpdater.php';
 
@@ -51,9 +50,9 @@ class EverneuControlPlugin
             $this->github_updater = new \EVN\Helpers\GitHubUpdater(
                 WP_PLUGIN_DIR . '/everneu-control/everneu-control.php',
                 'MariaDadonova',
-                'evernue',
+                'everneu-plugin-updater',
                 'master',
-                'wp-content/plugins/everneu-control'
+                ''
             );
             error_log('GitHubUpdater instantiated new');
             delete_site_transient('update_plugins');
