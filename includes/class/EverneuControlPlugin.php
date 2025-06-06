@@ -52,7 +52,7 @@ class EverneuControlPlugin
                 WP_PLUGIN_DIR . '/everneu-control/everneu-control.php',
                 'MariaDadonova',
                 'evernue',
-                'Sitemap_and_svg_settings',
+                'master',
                 'wp-content/plugins/everneu-control'
             );
             error_log('GitHubUpdater instantiated new');
