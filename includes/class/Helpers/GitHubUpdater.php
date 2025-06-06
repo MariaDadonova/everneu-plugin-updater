@@ -37,8 +37,9 @@ class GitHubUpdater {
     }
 
     private function get_zip_url() {
-        // Link to branch's zip archiveСсылка на zip архива ветки
-        return "https://api.github.com/repos/{$this->github_user}/{$this->github_repo}/zipball/{$this->branch}";
+        // Link to branch's zip archive
+        //return "https://api.github.com/repos/{$this->github_user}/{$this->github_repo}/zipball/{$this->branch}";
+        return "https://github.com/{$this->github_user}/{$this->github_repo}/archive/refs/heads/{$this->branch}.zip";
     }
 
     public function check_for_update($transient) {
