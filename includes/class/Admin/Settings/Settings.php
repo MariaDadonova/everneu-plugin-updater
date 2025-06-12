@@ -36,8 +36,9 @@ class Settings
 
     public function display_settings_ui() {
 
-        require_once __DIR__. '/SVG/AllowSVGUpload.php';
+        require_once __DIR__ . '/SVG/AllowSVGUpload.php';
         //require_once __DIR__. '/SiteMap/SiteMapClass.php';
+        require_once __DIR__ . '/Updater/UpdaterForm.php';
         wp_enqueue_style( 'evn-client-style', EVN_URL . 'assets/css/settings_tabs_styles.css' );
         ?>
 
@@ -48,15 +49,23 @@ class Settings
             <div class="tabs">
                 <!-- <input id="sitemap" type="radio" name="tabs" checked>
                 <label for="sitemap">Site map</label>-->
-                 <input id="svg" type="radio" name="tabs" checked>
-                 <label for="svg">SVG</label>
+                <input id="svg" type="radio" name="tabs" checked>
+                <label for="svg">SVG</label>
+                <input id="github" type="radio" name="tabs">
+                <label for="github">Updates</label>
                  <!--<section id="content-sitemap">
                      <p>--><?php /*new SiteMap\SiteMapClass;*/ ?><!--</p>
                 </section>-->
                 <section id="content-svg">
                     <p><?php
-                    $svg_obj = new SVG\AllowSVGUpload;
-                    $svg_obj->display_svg_ui();
+                        $svg_obj = new SVG\AllowSVGUpload;
+                        $svg_obj->display_svg_ui();
+                    ?></p>
+                </section>
+                <section id="content-github">
+                    <p><?php
+                        $github_form = new Updater\UpdaterForm;
+                        $github_form->display_svg_ui();
                     ?></p>
                 </section>
             </div>

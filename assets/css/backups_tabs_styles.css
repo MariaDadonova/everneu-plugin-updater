@@ -115,19 +115,13 @@ section {
 }
 
 .ev-submit-form input[type="submit"] {
-    display: none;
+    display: block;
 }
 
 .ev-form {
     display: flex;
     flex-direction: column;
     gap: 0px;
-}
-
-.ev-form-row {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
 }
 
 .notice {

@@ -27,11 +27,12 @@ class AllowSVGUpload
             $svg_option_value = isset($_POST['svg_option']) ? $_POST['svg_option'] : 'off';
             $updated = update_option('svg_option', $svg_option_value);
             if ($updated) {
-                error_log("SVG Option saved successfully");
+                //error_log("SVG Option saved successfully");
+                echo '<div id="message" class="updated"><p>Settings saved successfully!</p></div>';
             } else {
-                error_log("Failed to save SVG Option");
+                //error_log("Failed to save SVG Option");
+                echo '<div id="message" class="updated"><p>Failed to save SVG Option</p></div>';
             }
-            echo '<div id="message" class="updated"><p>Settings saved successfully!</p></div>';
         }
 
         // get a current option

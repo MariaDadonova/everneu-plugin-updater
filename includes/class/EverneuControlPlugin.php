@@ -41,6 +41,7 @@ class EverneuControlPlugin
         // Include helpers
         require_once EVN_DIR . 'includes/class/Helpers/Environment.php';
         require_once EVN_DIR . 'includes/class/Helpers/CronInterval.php';
+        require_once EVN_DIR . 'includes/class/Helpers/Encryption.php';
 
         /* Include GitHub updater */
         require_once EVN_DIR . 'includes/class/Helpers/plugin-data-parser.php';

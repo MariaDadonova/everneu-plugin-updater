@@ -3,6 +3,7 @@
 namespace EVN\Admin\Backups;
 
 use DropboxAPI;
+use EVN\Helpers\Encryption;
 use MySql;
 use ZipArchive;
 
@@ -65,10 +66,10 @@ class AutoBackupMaster {
             $dropbox_settings = json_decode($dropbox_settings, true);
         }
 
-        $refresh_token = $dropbox_settings['refresh_token'];
-        $app_key = $dropbox_settings['app_key'];
-        $app_secret = $dropbox_settings['app_secret'];
-        $access_code = $dropbox_settings['access_code'];
+        $refresh_token = Encryption::decrypt($dropbox_settings['refresh_token']);
+        $app_key = Encryption::decrypt($dropbox_settings['app_key']);
+        $app_secret = Encryption::decrypt($dropbox_settings['app_secret']);
+        $access_code = Encryption::decrypt($dropbox_settings['access_code']);
 
         $drops = new DropboxAPI($app_key, $app_secret, $access_code);
 

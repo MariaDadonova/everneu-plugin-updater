@@ -4,7 +4,7 @@
 Plugin Name: Everneu Control
 Plugin URI: https://github.com/MariaDadonova/evernue
 Description: Plugin for control process of development in the company.
-Version: 1.2.0
+Version: 1.0.0
 Author: Maria Dadonova
 Author URI: http://everneu.wpengine.com
 License: A "Slug" license name e.g. GPL2
@@ -61,19 +61,6 @@ function ec_install(){
   hours int(11),
   minutes int(11)
   ) $charset_collate;";*/
-
-    $dropbox_settings = array(
-        'app_key'       => 'wrn6dbwzzouq76c',
-        'app_secret'    => 'r9b85btvwdu8fbr',
-        'access_code'   => 'uas8Uv0ZnMkAAAAAAAAAgn98MqROSwssm_v8uVndEO4',
-        'refresh_token' => 'L51cN6YTRZUAAAAAAAAAAdpcm1HBbvEPnBjY0d1DDdboqBwrrX7CLqXNjsLjPj5c'
-    );
-
-    if (!get_option('ev_dropbox_settings')) {
-        add_option('ev_dropbox_settings', $dropbox_settings);
-    } else {
-        update_option('ev_dropbox_settings', $dropbox_settings);
-    }
 
     // [add comment for why we require upgrade.php] or remove if no longer needed
     //Connecting upgrade.php , which contains the dbDelta() function – it safely creates/updates tables.

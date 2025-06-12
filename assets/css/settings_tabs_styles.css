@@ -48,8 +48,31 @@ input:checked + label {
 }
 
 #sitemap:checked ~ #content-sitemap,
-#svg:checked ~ #content-svg {
+#svg:checked ~ #content-svg,
+#github:checked ~ #content-github {
     display: block;
+}
+
+.ev-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+}
+
+/* Keys form styles */
+.ev-form input[type="text"] {
+    padding: 5px 10px;
+    margin: 0 !important;
+    border-radius: 0px;
+    width: 100%;
+    border: 15px solid #e7f4ff;
+}
+
+.ev-form label {
+    background: #e7f4ff;
+    font-weight: bold;
+    width: 100%;
+    padding-bottom: 0px !important;
 }
 
 section {

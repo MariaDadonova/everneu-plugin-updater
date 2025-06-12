@@ -23,15 +23,23 @@ class GitHubUpdater {
     }
 
     private function get_auth_headers() {
+        $github_token_wpo = get_option('ev_github_token');
+        if (!empty($github_token_wpo) && is_string($github_token_wpo)) {
+            $github_token_wpo = json_decode($github_token_wpo, true);
+        }
+
+        $ecp_token = $github_token_wpo['EVN_GITHUB_TOKEN'];
+        $token = Encryption::decrypt($ecp_token);
+
         return [
             'User-Agent' => 'WordPress Plugin Updater',
-            'Authorization' => 'token ' . EVN_GITHUB_TOKEN,
+            'Authorization' => 'token ' . $token,
             'Accept' => 'application/vnd.github.v3+json',
         ];
     }
 
     private function get_api_file_url() {
-        // Path to mai plugin's file in repo
+        // Path to main plugin's file in repo
         $file_path = $this->subfolder ? $this->subfolder . '/' . basename($this->plugin_file) : basename($this->plugin_file);
         return "https://api.github.com/repos/{$this->github_user}/{$this->github_repo}/contents/{$file_path}?ref={$this->branch}";
     }

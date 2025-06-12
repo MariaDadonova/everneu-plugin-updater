@@ -3,6 +3,7 @@
 namespace EVN\Admin\Backups;
 
 use EVN\Helpers\CronInterval;
+use EVN\Helpers\Encryption;
 use EVN\Helpers\Environment;
 use DropboxAPI;
 use MySql;
@@ -90,18 +91,27 @@ class Backups
 
                     $create = '';
                     $delete = '';
+                    $api_keys = '';
 
                     if (Environment::isProduction()) {
                         $env = 'Production';
                         /* If cron task exists, show button, if not - disable */
-                        if (wp_next_scheduled('schedule_backup_by_month')){
+                        if (wp_next_scheduled('schedule_backup_by_month') && get_option('ev_dropbox_settings')){
                             $cron_ex = 'Yes';
                             $env_status = '<span style="color: green">Backup is created according to a schedule</span>';
                             $create = "disabled";
-                        } else {
+                            $api_keys = 'Exist';
+                        } elseif (!wp_next_scheduled('schedule_backup_by_month') && get_option('ev_dropbox_settings')) {
                             $cron_ex = 'No';
                             $env_status = '<span style="color: red">Backup is not created without a cron task</span>';
                             $delete = "disabled";
+                            $api_keys = 'Exist';
+                        } elseif (!get_option('ev_dropbox_settings') && wp_next_scheduled('schedule_backup_by_month')) {
+                            $cron_ex = 'No';
+                            $api_keys = 'None';
+                            $env_status = '<span style="color: red">Backup is not send to DropBox without API keys. Please, fill out keys in form of API keys tab</span>';
+                            $delete = "disabled";
+                            $api_keys = 'Does not exist';
                         }
                     } elseif (Environment::isStaging()) {
                         $env = 'Staging';
@@ -111,6 +121,26 @@ class Backups
                         $env = 'Development';
                         $env_status = '<span style="color: red">Backup is not created in development</span>';
                         $delete = "disabled";
+                    } else {
+                        $env = 'Unknown';
+                        /* If cron task exists, show button, if not - disable */
+                        if (wp_next_scheduled('schedule_backup_by_month') && get_option('ev_dropbox_settings')){
+                            $cron_ex = 'Yes';
+                            $env_status = '<span style="color: green">Backup is created according to a schedule</span>';
+                            $create = "disabled";
+                            $api_keys = 'Exist';
+                        } elseif (!wp_next_scheduled('schedule_backup_by_month') && get_option('ev_dropbox_settings')) {
+                            $cron_ex = 'No';
+                            $env_status = '<span style="color: red">Backup is not created without a cron task</span>';
+                            $delete = "disabled";
+                            $api_keys = 'Exist';
+                        } elseif (!get_option('ev_dropbox_settings') && wp_next_scheduled('schedule_backup_by_month')) {
+                            $cron_ex = 'No';
+                            $api_keys = 'None';
+                            $env_status = '<span style="color: red">Backup is not send to DropBox without API keys. Please, fill out keys in form of API keys tab</span>';
+                            $delete = "disabled";
+                            $api_keys = 'Does not exist';
+                        }
                     }
 
                     echo '<table class="tg">
@@ -123,43 +153,49 @@ class Backups
                                 <tr>
                                   <td><strong>The current environment:</strong></td>
                                   <td>'.$env.'</td>
-                                  <td rowspan="2">'.$env_status.'</td>
+                                  <td rowspan="3">'.$env_status.'</td>
                                 </tr>
                                 <tr>
                                   <td><strong>The cron task exist:</strong></td>
                                   <td>'.$cron_ex.'</td>
                                 </tr>
+                                <tr>
+                                  <td><strong>API keys:</strong></td>
+                                  <td>'.$api_keys.'</td>
+                                </tr>
                              </tbody>
                            </table>';
 
-                    echo '<div style="display: flex; gap: 10px;">
+              if (!Environment::isProduction()) {
+                  echo '<div style="display: flex; gap: 10px;">
                               <form method="post">
-                                <button type="submit" name="set_cron" class="button button-primary" '.$create.'>Create Cron task</button>
+                                <button type="submit" name="set_cron" class="button button-primary" ' . $create . '>Create Cron task</button>
                               </form>
                               <form method="post">
-                                <button type="submit" name="delete_cron" class="button button-primary" '.$delete.'>Delete Cron task</button>
+                                <button type="submit" name="delete_cron" class="button button-primary" ' . $delete . '>Delete Cron task</button>
                               </form>
                           </div>';
 
-                    /* Button for creating cron by click */
-                    if (isset($_POST['set_cron'])) {
-                        if (!wp_next_scheduled('schedule_backup_by_month')) {
-                            CronInterval::schedule_monthly_backup_event();
-                            echo "Cron task added!";
-                        } else {
-                            echo "The Cron task already exists!";
-                        }
-                    }
+                  /* Button for creating cron by click */
+                  if (isset($_POST['set_cron'])) {
+                      if (!wp_next_scheduled('schedule_backup_by_month')) {
+                          CronInterval::schedule_monthly_backup_event();
+                          echo "Cron task added!";
+                      } else {
+                          echo "The Cron task already exists!";
+                      }
+                  }
 
-                    /* Button for removing cron by click */
-                    if (isset($_POST['delete_cron'])) {
-                        if (wp_next_scheduled('schedule_backup_by_month')) {
-                            CronInterval::clear_scheduled_backup_event();
-                            echo "Cron task deleted!";
-                        } else {
-                            echo "The Cron task already deleted!";
-                        }
-                    }
+                  /* Button for removing cron by click */
+                  if (isset($_POST['delete_cron'])) {
+                      if (wp_next_scheduled('schedule_backup_by_month')) {
+                          CronInterval::clear_scheduled_backup_event();
+                          echo "Cron task deleted!";
+                      } else {
+                          echo "The Cron task already deleted!";
+                      }
+                  }
+              }
                     ?>
 
                 </section>
@@ -193,26 +229,57 @@ class Backups
                 <section id="content-api-keys">
                     <p>
                       <?php
-                      $dropbox_settings = get_option('ev_dropbox_settings');
-                      if (!empty($dropbox_settings) && is_string($dropbox_settings)) {
-                          $dropbox_settings = json_decode($dropbox_settings, true);
+                      if (isset($_POST['ec_dropbox_keys_submit'])) {
+                          $app_key = sanitize_text_field($_POST['app_key']);
+                          $app_secret = sanitize_text_field($_POST['app_secret']);
+                          $access_code = sanitize_text_field($_POST['access_code']);
+                          $refresh_token = sanitize_text_field($_POST['refresh_token']);
+
+                          $encrypted_app_key = Encryption::encrypt($app_key);
+                          $encrypted_app_secret = Encryption::encrypt($app_secret);
+                          $encrypted_access_code = Encryption::encrypt($access_code);
+                          $encrypted_refresh_token = Encryption::encrypt($refresh_token);
+
+                          $dropbox_settings = array(
+                              'app_key'       => $encrypted_app_key,
+                              'app_secret'    => $encrypted_app_secret,
+                              'access_code'   => $encrypted_access_code,
+                              'refresh_token' => $encrypted_refresh_token
+                          );
+
+                          if (!get_option('ev_dropbox_settings')) {
+                              add_option('ev_dropbox_settings', $dropbox_settings);
+                              echo '<div id="message" class="updated"><p>DropBox keys saved successfully!</p></div>';
+                              error_log("DropBox keys saved successfully");
+                          } else {
+                              update_option('ev_dropbox_settings', $dropbox_settings);
+                              echo '<div id="message" class="updated"><p>DropBox keys updated successfully!</p></div>';
+                              error_log("DropBox keys updated successfully");
+                          }
                       }
 
-                      $refresh_token = $dropbox_settings['refresh_token'];
-                      $app_key = $dropbox_settings['app_key'];
-                      $app_secret = $dropbox_settings['app_secret'];
-                      $access_code = $dropbox_settings['access_code'];
+                      $dropbox_settings = get_option('ev_dropbox_settings');
+                      if (!empty($dropbox_settings) && is_array($dropbox_settings)) {
+                          $refresh_token = $dropbox_settings['refresh_token'];
+                          $app_key       = $dropbox_settings['app_key'];
+                          $app_secret    = $dropbox_settings['app_secret'];
+                          $access_code   = $dropbox_settings['access_code'];
+                      } else {
+                          $refresh_token = $app_key = $app_secret = $access_code = '';
+                      }
 
-                        ?>
+                      ?>
 
                     <h3>API keys</h3>
-                    <form method="post" inert="" class="ev-submit-form">
+                    <!-- inert disabled form -->
+                    <!--<form method="post" inert="" class="ev-submit-form">-->
+                    <form method="post" class="ev-submit-form">
                         <div class="ev-form">
                             <div class="">
                                 <label id="appkey" for="AppKey">App Key </label>
                             </div>
                             <div class="">
-                                <input class="style-field" type="text" value="<?= $app_key ?>">
+                                <input id="app_key" name="app_key" class="style-field" type="text" value="<?= $app_key ?>">
                             </div>
                         </div>
                         <div class="ev-form">
@@ -220,7 +287,7 @@ class Backups
                                 <label id="appsecret" for="AppSecret">App Secret </label>
                             </div>
                             <div class="">
-                                <input class="style-field" type="text" value="<?= $app_secret ?>">
+                                <input id="app_secret" name="app_secret" class="style-field" type="text" value="<?= $app_secret ?>">
                             </div>
                         </div>
                         <div class="ev-form">
@@ -228,7 +295,7 @@ class Backups
                                 <label id="accesscode" for="AccessCode">Access Code </label>
                             </div>
                             <div class="">
-                                <input class="style-field" type="text" value="<?= $access_code ?>">
+                                <input id="access_code" name="access_code" class="style-field" type="text" value="<?= $access_code ?>">
                             </div>
                         </div>
                         <div class="ev-form">
@@ -236,10 +303,11 @@ class Backups
                                 <label id="refreshtoken" for="RefreshToken">Refresh Token </label>
                             </div>
                             <div class="">
-                                <input class="style-field" type="text" value="<?= $refresh_token ?>">
+                                <input id="refresh_token" name="refresh_token" class="style-field" type="text" value="<?= $refresh_token ?>">
                             </div>
                         </div>
-                        <?php submit_button('Save'); ?>
+                        <i>*All keys encrypt after saving</i><br>
+                        <br><input type="submit" name="ec_dropbox_keys_submit" class="button button-primary" value="Save">
                     </form>
 
                     </p>
